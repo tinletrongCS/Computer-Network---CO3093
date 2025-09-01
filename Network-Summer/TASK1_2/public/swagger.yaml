@@ -1,0 +1,131 @@
+openapi: 3.0.3
+info:
+  title: Product API with Login
+  description: Simple API for Login and Product Management (Session via Cookie)
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+paths:
+  /login:
+    post:
+      summary: User login
+      description: Authenticate user and create session via cookie.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          headers:
+            Set-Cookie:
+              description: Session cookie set by server
+              schema:
+                type: string
+                example: token=abcdef123456; HttpOnly; Path=/; Max-Age=3600
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Login success!
+        '401':
+          description: Invalid credentials
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Invalid credentials.
+
+  /product:
+    get:
+      summary: List products
+      description: Return list of products (requires valid session cookie)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        price:
+                          type: number
+                          format: float
+        '401':
+          description: Unauthorized (missing or invalid cookie)
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Unauthorized
+
+    post:
+      summary: Create product
+      description: Create a new product (requires valid session cookie)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - price
+              properties:
+                name:
+                  type: string
+                price:
+                  type: number
+                  format: float
+      responses:
+        '201':
+          description: Product created successfully
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Product created successfully.
+        '400':
+          description: Invalid request (missing name or price)
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Missing 'name' or 'price' in request body
+        '401':
+          description: Unauthorized
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Unauthorized
